@@ -5,8 +5,8 @@ import axios from "axios";
 const initialItem = {
   title: "",
   director: "",
-  metascore: "",
-  stars: "",
+  metascore: '',
+  stars: '',
 };
 
 const UpdateForm = props => {
@@ -14,12 +14,18 @@ const UpdateForm = props => {
   const { push } = useHistory();
   const [item, setItem] = useState(initialItem);
   const { id } = useParams();
+  
   useEffect(() => {
+    console.log('im triggered')
+
     axios
       .get(`http://localhost:5000/api/movies/${id}`)
       .then(res => {
-        console.log(res.data)
-        setItem(res.data);
+        console.log('get', res)
+        setItem({
+            ...res.data,
+            stars: res.data.stars.join(', ')
+        });
       })
       .catch(err => console.log(err));
   }, [id]);
@@ -27,7 +33,7 @@ const UpdateForm = props => {
   const changeHandler = ev => {
     ev.persist();
     let value = ev.target.value;
-    if (ev.target.name === "director") {
+    if (ev.target.name === "metascore") {
       value = parseInt(value, 10);
     }
 
@@ -40,14 +46,21 @@ const UpdateForm = props => {
   const handleSubmit = e => {
     e.preventDefault();
     // make a PUT request to edit the item
+
+    const updatedMovie = {
+        ...item,
+        metascore: Number(item.metascore),
+        stars: item.stars.split(', ')
+    }
+
     axios
-      .put(`http://localhost:5000/api/movies/${id}`, item)
+      .put(`http://localhost:5000/api/movies/${id}`, updatedMovie)
       .then(res => {
-        // res.data
-        props.setMovieList(res.data);
-        push(`/movies/:id${id}`);
+        console.log('put', res)
+        props.setMovieList(props.movieList.map(m => m.id !== id ? m : res.data))
+        push(`/movies/${id}`);
       })
-      .catch(err => console.log(err));
+      .catch(err => console.log('catch', err));
   };
 
   return (
